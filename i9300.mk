@@ -44,8 +44,7 @@ PRODUCT_PACKAGES += \
 
 # Gps
 PRODUCT_PACKAGES += \
-    gps.smdk4x12 \
-    libgps_symbols
+    gps.smdk4x12
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/gps.xml:system/vendor/etc/gps.xml \
