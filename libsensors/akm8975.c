@@ -19,7 +19,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <string.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <errno.h>
 
 #include <hardware/sensors.h>
