@@ -18,14 +18,16 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <string.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <errno.h>
 
 #include <hardware/sensors.h>
 #include <hardware/hardware.h>
 
 #define LOG_TAG "smdk4x12_sensors"
-#include <utils/Log.h>
+#include <log/log.h>
 
 #include "smdk4x12_sensors.h"
 #include "lsm330dlc_accel.h"
