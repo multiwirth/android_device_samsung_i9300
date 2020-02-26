@@ -47,8 +47,8 @@ PRODUCT_PACKAGES += \
     gps.smdk4x12
 
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/gps.xml:system/vendor/etc/gps.xml \
-    $(LOCAL_PATH)/gps_daemon.sh:system/vendor/bin/gps_daemon.sh
+    $(LOCAL_PATH)/configs/gps.xml:vendor/etc/gps.xml \
+    $(LOCAL_PATH)/gps_daemon.sh:vendor/bin/gps_daemon.sh
 
 # Keylayout
 PRODUCT_COPY_FILES += \
