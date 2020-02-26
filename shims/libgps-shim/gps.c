@@ -15,7 +15,7 @@
  */
 #define LOG_TAG "libgps-shim"
 
-#include <utils/Log.h>
+#include <log/log.h>
 #include <hardware/gps.h>
 
 #include <dlfcn.h>
