@@ -17,6 +17,10 @@
 #
 # system.prop for i9300
 #
+
+PRODUCT_PROPERTY_OVERRIDES += \
+	ro.vendor.build.fingerprint=samsung/m0xx/m0:4.3/JSS15J/I9300XXUGMJ9:user/release-keys
+
 PRODUCT_PROPERTY_OVERRIDES += \
 	config.disable_atlas=true \
 	dalvik.vm.dexopt-data-only=1 \
