@@ -89,6 +89,18 @@ int sysfs_string_read(char *path, char *buffer, size_t length);
 int sysfs_string_write(char *path, char *buffer, size_t length);
 
 /*
+ * Accel
+ */
+
+void *createAccelSensor(void);
+void deleteAccelSensor(void *sensorPtr);
+int accelPollEvents(void *sensorPtr, sensors_event_t* data, int count);
+int accelEnable(void *sensorPtr, int32_t handle, int en);
+int accelSetDelay(void *sensorPtr, int32_t handle, int64_t ns);
+int accelReadEvents(void *sensorPtr, sensors_event_t* data, int count);
+int accelGetDataFd(void *sensorPtr);
+
+/*
  * Sensors
  */
 

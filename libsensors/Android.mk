@@ -18,6 +18,9 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := \
+	SensorBase.cpp \
+	AccelSensor.cpp  \
+	InputEventReader.cpp \
 	smdk4x12_sensors.c \
 	input.c \
 	akm8975.c \

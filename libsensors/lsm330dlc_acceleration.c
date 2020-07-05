@@ -39,6 +39,8 @@ struct lsm330dlc_acceleration_data {
 	int thread_continue;
 };
 
+void *mAccel;
+
 int lsm330dlc_acceleration_init(struct smdk4x12_sensors_handlers *handlers,
 	struct smdk4x12_sensors_device *device)
 {
@@ -50,7 +52,9 @@ int lsm330dlc_acceleration_init(struct smdk4x12_sensors_handlers *handlers,
 	int rc;
 	int i;
 
-	ALOGD("%s(%p, %p)", __func__, handlers, device);
+        mAccel = createAccelSensor();
+
+	ALOGE("%s(%p, %p)", __func__, handlers, device);
 
 	if (handlers == NULL || device == NULL)
 		return -EINVAL;
@@ -63,7 +67,7 @@ int lsm330dlc_acceleration_init(struct smdk4x12_sensors_handlers *handlers,
 		goto error;
 	}
 
-	input_fd = input_open("accelerometer_sensor");
+	input_fd = accelGetDataFd(mAccel);
 	if (input_fd < 0) {
 		ALOGE("%s: Unable to open acceleration input", __func__);
 		goto error;
@@ -103,7 +107,9 @@ int lsm330dlc_acceleration_deinit(struct smdk4x12_sensors_handlers *handlers)
 {
 	struct lsm330dlc_acceleration_data *data = NULL;
 
-	ALOGD("%s(%p)", __func__, handlers);
+	deleteAccelSensor(mAccel);
+
+	ALOGE("%s(%p)", __func__, handlers);
 
 	if (handlers == NULL || handlers->data == NULL)
 		return -EINVAL;
@@ -115,10 +121,6 @@ int lsm330dlc_acceleration_deinit(struct smdk4x12_sensors_handlers *handlers)
 	pthread_mutex_unlock(&data->mutex);
 
 	pthread_mutex_destroy(&data->mutex);
-
-	if (handlers->poll_fd >= 0)
-		close(handlers->poll_fd);
-	handlers->poll_fd = -1;
 
 	if (data->device_fd >= 0)
 		close(data->device_fd);
@@ -132,91 +134,26 @@ int lsm330dlc_acceleration_deinit(struct smdk4x12_sensors_handlers *handlers)
 
 int lsm330dlc_acceleration_activate(struct smdk4x12_sensors_handlers *handlers)
 {
-	struct lsm330dlc_acceleration_data *data;
-	int device_fd;
-	int enable;
-	int rc;
+	int handle = -1; // unused
+	int enable = 1;
 
-	ALOGD("%s(%p)", __func__, handlers);
-
-	if (handlers == NULL || handlers->data == NULL)
-		return -EINVAL;
-
-	data = (struct lsm330dlc_acceleration_data *) handlers->data;
-
-	device_fd = data->device_fd;
-	if (device_fd < 0)
-		return -1;
-
-	enable = 1;
-	rc = ioctl(device_fd, LSM330DLC_ACCEL_IOCTL_SET_ENABLE, &enable);
-	if (rc < 0) {
-		ALOGE("%s: Unable to set lsm330dlc acceleration enable", __func__);
-		return -1;
-	}
-	
-	handlers->activated = 1;
-	pthread_mutex_unlock(&data->mutex);
-
+	accelEnable(mAccel, handle, enable);
 	return 0;
 }
 
 int lsm330dlc_acceleration_deactivate(struct smdk4x12_sensors_handlers *handlers)
 {
-	struct lsm330dlc_acceleration_data *data;
-	int device_fd;
-	int enable;
-	int rc;
+	int handle = -1; // unused
+	int enable = 0;
 
-	ALOGD("%s(%p)", __func__, handlers);
-
-	if (handlers == NULL || handlers->data == NULL)
-		return -EINVAL;
-
-	data = (struct lsm330dlc_acceleration_data *) handlers->data;
-
-	device_fd = data->device_fd;
-	if (device_fd < 0)
-		return -1;
-
-	enable = 0;
-	rc = ioctl(device_fd, LSM330DLC_ACCEL_IOCTL_SET_ENABLE, &enable);
-	if (rc < 0) {
-		ALOGE("%s: Unable to set lsm330dlc acceleration enable", __func__);
-		return -1;
-	}
-
-	handlers->activated = 0;
-
+	accelEnable(mAccel, handle, enable);
 	return 0;
 }
 
 int lsm330dlc_acceleration_set_delay(struct smdk4x12_sensors_handlers *handlers, int64_t delay)
 {
-	struct lsm330dlc_acceleration_data *data;
-	int64_t d;
-	int device_fd;
-	int rc;
-
-	ALOGD("%s(%p, %" PRId64 ")", __func__, handlers, delay);
-
-	if (handlers == NULL || handlers->data == NULL)
-		return -EINVAL;
-
-	data = (struct lsm330dlc_acceleration_data *) handlers->data;
-
-	device_fd = data->device_fd;
-	if (device_fd < 0)
-		return -1;
-
-	d = (int64_t) delay;
-	rc = ioctl(device_fd, LSM330DLC_ACCEL_IOCTL_SET_DELAY, &d);
-	if (rc < 0) {
-		ALOGE("%s: Unable to set lsm330dlc acceleration delay", __func__);
-		return -1;
-	}
-
-	data->delay = delay;
+	int handle = -1; // unused
+	accelSetDelay(mAccel, handle, delay);
 
 	return 0;
 }
@@ -237,7 +174,7 @@ int lsm330dlc_acceleration_get_data(struct smdk4x12_sensors_handlers *handlers,
 	int rc;
 	int sensorId = SENSOR_TYPE_ACCELEROMETER;
 
-//	ALOGD("%s(%p, %p)", __func__, handlers, event);
+//	ALOGE("%s(%p, %p)", __func__, handlers, event);
 
 	if (handlers == NULL || handlers->data == NULL || event == NULL)
 		return -EINVAL;
@@ -251,14 +188,16 @@ int lsm330dlc_acceleration_get_data(struct smdk4x12_sensors_handlers *handlers,
 		sensor_event.meta_data.what = 0;
 		*event++ = sensor_event;
 		mFlushed &= ~(0x01 << sensorId);
-		ALOGD("AkmSensor: %s Flushed sensorId: %d", __func__, sensorId);
+		ALOGE("AkmSensor: %s Flushed sensorId: %d", __func__, sensorId);
 	}
 
 	data = (struct lsm330dlc_acceleration_data *) handlers->data;
 
-	input_fd = handlers->poll_fd;
-	if (input_fd < 0)
+	input_fd = accelGetDataFd(mAccel);
+	if (input_fd < 0) {
+		ALOGE("%s: received wrong fd=%d", __func__, input_fd);
 		return -1;
+	}
 
 	memset(event, 0, sizeof(struct sensors_event_t));
 	event->version = sizeof(struct sensors_event_t);
